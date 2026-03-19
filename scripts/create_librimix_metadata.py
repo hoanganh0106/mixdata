@@ -186,17 +186,22 @@ def set_pairs(librispeech_md_file, wham_md_file, n_src):
     # In train sets utterance are only used once
     if 'train' in librispeech_md_file.iloc[0]['subset']:
         utt_pairs = set_utt_pairs(librispeech_md_file, utt_pairs, n_src)
-        noise_pairs = set_noise_pairs(utt_pairs, noise_pairs,
-                                      librispeech_md_file, wham_md_file)
+        noise_pairs = set_noise_pairs(utt_pairs, noise_pairs, librispeech_md_file, wham_md_file)
+        if 'train-clean-100' in librispeech_md_file.iloc[0]['subset']:
+            utt_pairs = utt_pairs[:5000]
+            noise_pairs = noise_pairs[:5000]
+        elif 'train-clean-360' in librispeech_md_file.iloc[0]['subset']:
+            utt_pairs = utt_pairs[:20000]
+            noise_pairs = noise_pairs[:20000]
     # Otherwise we want 3000 mixtures
     else:
-        while len(utt_pairs) < 3000:
+        while len(utt_pairs) < 1000:
             utt_pairs = set_utt_pairs(librispeech_md_file, utt_pairs, n_src)
             noise_pairs = set_noise_pairs(utt_pairs, noise_pairs,
                                           librispeech_md_file, wham_md_file)
             utt_pairs, noise_pairs = remove_duplicates(utt_pairs, noise_pairs)
-        utt_pairs = utt_pairs[:3000]
-        noise_pairs = noise_pairs[:3000]
+        utt_pairs = utt_pairs[:1000]
+        noise_pairs = noise_pairs[:1000]
 
     return utt_pairs, noise_pairs
 

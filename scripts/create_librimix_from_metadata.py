@@ -105,8 +105,7 @@ def process_metadata_file(csv_path, freqs, n_src, librispeech_dir, wham_dir,
             if types == ['mix_clean']:
                 subdirs = [f's{i + 1}' for i in range(n_src)] + ['mix_clean']
             else:
-                subdirs = [f's{i + 1}' for i in range(n_src)] + types + [
-                    'noise']
+                subdirs = [f's{i + 1}' for i in range(n_src)] + types
             # Create directories accordingly
             for subdir in subdirs:
                 os.makedirs(os.path.join(dir_path, subdir))
@@ -136,6 +135,7 @@ def process_utterances(md_file, librispeech_dir, wham_dir, freq, mode, subdirs,
             n_src, librispeech_dir, wham_dir, freq, mode, subdirs, dir_path),
         [row for _, row in md_file.iterrows()],
         chunksize=10,
+        max_workers=1,
     ):
         for mix_id, snr_list, abs_mix_path, abs_source_path_list, abs_noise_path, length, subdir in results:
             # Add line to the dataframes
@@ -165,8 +165,7 @@ def process_utterance(n_src, librispeech_dir, wham_dir, freq, mode, subdirs, dir
                                          subdirs, dir_path, freq,
                                          n_src)
     # Write the noise and get its path
-    abs_noise_path = write_noise(mix_id, transformed_sources, dir_path,
-                                 freq)
+    abs_noise_path = ""
     # Mixtures are different depending on the subdir
     for subdir in subdirs:
         if subdir == 'mix_clean':
@@ -323,14 +322,11 @@ def resample_list(sources_list, freq):
 def fit_lengths(source_list, mode):
     """ Make the sources to match the target length """
     sources_list_reshaped = []
-    # Check the mode
-    if mode == 'min':
-        target_length = min([len(source) for source in source_list])
-        for source in source_list:
+    target_length = 64000  # 4 seconds at 16kHz
+    for source in source_list:
+        if len(source) > target_length:
             sources_list_reshaped.append(source[:target_length])
-    else:
-        target_length = max([len(source) for source in source_list])
-        for source in source_list:
+        else:
             sources_list_reshaped.append(
                 np.pad(source, (0, target_length - len(source)),
                        mode='constant'))
