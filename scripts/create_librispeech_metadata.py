@@ -7,7 +7,7 @@ from tqdm import tqdm
 
 # Global parameter
 # We will filter out files shorter than that
-NUMBER_OF_SECONDS = 3
+NUMBER_OF_SECONDS = 4
 # In LibriSpeech all the sources are at 16K Hz
 RATE = 16000
 
