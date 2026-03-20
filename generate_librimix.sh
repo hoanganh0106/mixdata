@@ -1,7 +1,7 @@
 #!/bin/bash
 set -eu  # Exit on error
 
-storage_dir=$1
+storage_dir="mixdata/storage/"
 librispeech_dir=$storage_dir/LibriSpeech
 wham_dir=$storage_dir/wham_noise
 librimix_outdir=$storage_dir/
