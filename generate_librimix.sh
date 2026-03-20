@@ -70,8 +70,28 @@ python_path=python
 # If you wish to rerun this script in the future please comment this line out.
 $python_path scripts/augment_train_noise.py --wham_dir $wham_dir
 
+echo "Generating LibriSpeech metadata"
+$python_path scripts/create_librispeech_metadata.py \
+    --librispeech_dir $librispeech_dir \
+    --librispeech_md_dir $storage_dir/metadata/LibriSpeech
+
+echo "Generating WHAM metadata"
+$python_path scripts/create_wham_metadata.py \
+    --wham_dir $wham_dir \
+    --wham_md_dir $storage_dir/metadata/Wham_noise
+
 for n_src in 3; do
-  metadata_dir=metadata/Libri$n_src"Mix"
+  metadata_dir=$storage_dir/metadata/Libri$n_src"Mix"
+
+  echo "Generating LibriMix metadata"
+  $python_path scripts/create_librimix_metadata.py \
+      --librispeech_dir $librispeech_dir \
+      --librispeech_md_dir $storage_dir/metadata/LibriSpeech \
+      --wham_dir $wham_dir \
+      --wham_md_dir $storage_dir/metadata/Wham_noise \
+      --metadata_outdir $metadata_dir \
+      --n_src $n_src
+
   $python_path scripts/create_librimix_from_metadata.py --librispeech_dir $librispeech_dir \
     --wham_dir $wham_dir \
     --metadata_dir $metadata_dir \
