@@ -15,12 +15,17 @@ RATE = 16000
 parser = argparse.ArgumentParser()
 parser.add_argument('--librispeech_dir', type=str, required=True,
                     help='Path to librispeech root directory')
+parser.add_argument('--librispeech_md_dir', type=str, default=None,
+                    help='Path to store librispeech metadata (default: librispeech_dir/metadata)')
 
 
 def main(args):
     librispeech_dir = args.librispeech_dir
     # Create Librispeech metadata directory
-    librispeech_md_dir = os.path.join(librispeech_dir, 'metadata')
+    if args.librispeech_md_dir:
+        librispeech_md_dir = args.librispeech_md_dir
+    else:
+        librispeech_md_dir = os.path.join(librispeech_dir, 'metadata')
     os.makedirs(librispeech_md_dir, exist_ok=True)
     create_librispeech_metadata(librispeech_dir, librispeech_md_dir)
 

@@ -105,7 +105,9 @@ def process_metadata_file(csv_path, freqs, n_src, librispeech_dir, wham_dir,
             if types == ['mix_clean']:
                 subdirs = [f's{i + 1}' for i in range(n_src)] + ['mix_clean']
             else:
-                subdirs = [f's{i + 1}' for i in range(n_src)] + types
+                # Đổi mix_both → mix để SPMamba đọc trực tiếp
+                renamed_types = ['mix' if t == 'mix_both' else t for t in types]
+                subdirs = [f's{i + 1}' for i in range(n_src)] + renamed_types
             # Create directories accordingly
             for subdir in subdirs:
                 os.makedirs(os.path.join(dir_path, subdir))
@@ -170,7 +172,8 @@ def process_utterance(n_src, librispeech_dir, wham_dir, freq, mode, subdirs, dir
     for subdir in subdirs:
         if subdir == 'mix_clean':
             sources_to_mix = transformed_sources[:n_src]
-        elif subdir == 'mix_both':
+        elif subdir == 'mix':
+            # mix = tất cả sources + noise (giống mix_both cũ)
             sources_to_mix = transformed_sources
         elif subdir == 'mix_single':
             sources_to_mix = [transformed_sources[0],

@@ -103,10 +103,6 @@ def create_librimix_metadata(librispeech_dir, librispeech_md_dir, wham_dir,
         mixtures_md, mixtures_info = create_librimix_df(
             librispeech_md, librispeech_dir, wham_md, wham_dir,
             n_src)
-        # Round number of files
-        mixtures_md = mixtures_md[:len(mixtures_md) // 100 * 100]
-        mixtures_info = mixtures_info[:len(mixtures_info) // 100 * 100]
-
         # Save csv files
         mixtures_md.to_csv(save_path, index=False)
         mixtures_info.to_csv(info_save_path, index=False)
@@ -183,25 +179,22 @@ def set_pairs(librispeech_md_file, wham_md_file, n_src):
     # Initialize list for pairs sources
     utt_pairs = []
     noise_pairs = []
-    # In train sets utterance are only used once
+    # Chỉ xử lý train sets — tổng 27,000 mixtures = 108,000 WAV files
+    # train-clean-100: 7,000 mixtures
+    # train-clean-360: 20,000 mixtures
     if 'train' in librispeech_md_file.iloc[0]['subset']:
         utt_pairs = set_utt_pairs(librispeech_md_file, utt_pairs, n_src)
         noise_pairs = set_noise_pairs(utt_pairs, noise_pairs, librispeech_md_file, wham_md_file)
         if 'train-clean-100' in librispeech_md_file.iloc[0]['subset']:
-            utt_pairs = utt_pairs[:5000]
-            noise_pairs = noise_pairs[:5000]
+            utt_pairs = utt_pairs[:7000]
+            noise_pairs = noise_pairs[:7000]
         elif 'train-clean-360' in librispeech_md_file.iloc[0]['subset']:
             utt_pairs = utt_pairs[:20000]
             noise_pairs = noise_pairs[:20000]
-    # Otherwise we want 3000 mixtures
     else:
-        while len(utt_pairs) < 1000:
-            utt_pairs = set_utt_pairs(librispeech_md_file, utt_pairs, n_src)
-            noise_pairs = set_noise_pairs(utt_pairs, noise_pairs,
-                                          librispeech_md_file, wham_md_file)
-            utt_pairs, noise_pairs = remove_duplicates(utt_pairs, noise_pairs)
-        utt_pairs = utt_pairs[:1000]
-        noise_pairs = noise_pairs[:1000]
+        # Không xử lý dev/test — SPMamba sẽ tự chia từ train
+        print(f"Skipping non-train subset: {librispeech_md_file.iloc[0]['subset']}")
+        return [], []
 
     return utt_pairs, noise_pairs
 

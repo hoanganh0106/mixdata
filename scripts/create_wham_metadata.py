@@ -14,12 +14,17 @@ RATE = 16000
 parser = argparse.ArgumentParser()
 parser.add_argument('--wham_dir', type=str, required=True,
                     help='Path to wham_noise root directory')
+parser.add_argument('--wham_md_dir', type=str, default=None,
+                    help='Path to store wham metadata (default: wham_dir/metadata)')
 
 
 def main(args):
     wham_noise_dir = args.wham_dir
     # Create wham_noise metadata directory
-    wham_noise_md_dir = os.path.join(wham_noise_dir, 'metadata')
+    if args.wham_md_dir:
+        wham_noise_md_dir = args.wham_md_dir
+    else:
+        wham_noise_md_dir = os.path.join(wham_noise_dir, 'metadata')
     os.makedirs(wham_noise_md_dir, exist_ok=True)
     create_wham_noise_metadata(wham_noise_dir, wham_noise_md_dir)
 
