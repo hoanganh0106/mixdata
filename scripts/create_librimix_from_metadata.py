@@ -137,7 +137,7 @@ def process_utterances(md_file, librispeech_dir, wham_dir, freq, mode, subdirs,
             n_src, librispeech_dir, wham_dir, freq, mode, subdirs, dir_path),
         [row for _, row in md_file.iterrows()],
         chunksize=10,
-        max_workers=1,
+        max_workers=8,
     ):
         for mix_id, snr_list, abs_mix_path, abs_source_path_list, abs_noise_path, length, subdir in results:
             # Add line to the dataframes
