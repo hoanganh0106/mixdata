@@ -72,53 +72,38 @@ for n_src in 3; do
       --wham_md_dir $storage_dir/metadata/Wham_noise \
       --metadata_outdir $metadata_dir \
       --n_src $n_src
+done
 
-  echo "Generating LibriMix WAV files"
-  $python_path scripts/create_librimix_from_metadata.py --librispeech_dir $librispeech_dir \
+# ============================================================
+# GHI TRỰC TIẾP VÀO HDF5 THAY VÌ 108,000 FILE WAV
+# Một file data_30h.h5 duy nhất (~8-10 GB compressed)
+# ============================================================
+
+hdf5_output="$storage_dir/data_30h.h5"
+metadata_dir="$storage_dir/metadata/Libri3Mix"
+
+echo ""
+echo "============================================"
+echo "  Generating HDF5 dataset: $hdf5_output"
+echo "  (Thay thế 108,000 file WAV rời rạc)"
+echo "============================================"
+
+$python_path scripts/create_librimix_hdf5.py \
+    --librispeech_dir $librispeech_dir \
     --wham_dir $wham_dir \
     --metadata_dir $metadata_dir \
-    --librimix_outdir $librimix_outdir \
-    --n_src $n_src \
-    --freqs 16k \
-    --modes min \
-    --types mix_both
-done
+    --output_file $hdf5_output \
+    --n_src 3 \
+    --freq 16k \
+    --batch_write_size 500
 
-# ============================================================
-# Merge train-100 and train-360 vào một thư mục train/ duy nhất
-# SPMamba cần cấu trúc: train/mix/ train/s1/ train/s2/ train/s3/
-# ============================================================
-echo "Merging train-100 and train-360 into single train/ directory..."
-
-data_base="$librimix_outdir/Libri3Mix/wav16k/min"
-train_dir="$data_base/train"
-
-# Tạo thư mục đích
-for subdir in mix s1 s2 s3; do
-  mkdir -p "$train_dir/$subdir"
-done
-
-# Copy (hardlink) files từ train-100 và train-360 vào train/
-for src_dir in "$data_base/train-100" "$data_base/train-360"; do
-  if [ -d "$src_dir" ]; then
-    for subdir in mix s1 s2 s3; do
-      if [ -d "$src_dir/$subdir" ]; then
-        cp -ln "$src_dir/$subdir/"*.wav "$train_dir/$subdir/" 2>/dev/null || \
-        cp "$src_dir/$subdir/"*.wav "$train_dir/$subdir/"
-      fi
-    done
-  fi
-done
-
-# Đếm số file
-total_files=$(find "$train_dir" -name "*.wav" | wc -l)
 echo ""
-echo "=========================================="
-echo "Dataset generation complete!"
-echo "Data location: $train_dir"
-echo "Total WAV files: $total_files (expected: 108,000)"
-echo "=========================================="
-
-if [ "$total_files" -ne 108000 ]; then
-  echo "WARNING: Expected 108,000 files but found $total_files!"
-fi
+echo "============================================"
+echo "  DATASET GENERATION COMPLETE!"
+echo ""
+echo "  HDF5 file: $hdf5_output"
+echo "  Size: $(du -h $hdf5_output | cut -f1)"
+echo ""
+echo "  Training:"
+echo "    python audio_train_h5.py --h5_path $hdf5_output"
+echo "============================================"
