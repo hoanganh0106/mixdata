@@ -97,12 +97,27 @@ $python_path scripts/create_librimix_hdf5.py \
     --freq 16k \
     --batch_write_size 500
 
+# ============================================================
+# DỌN DẸP: Xóa source audio + metadata (đã nằm trong HDF5)
+# Tiết kiệm ~35 GB disk
+# ============================================================
+
+echo ""
+echo "Cleaning up source files..."
+rm -rf "$librispeech_dir"
+echo "  [OK] Removed LibriSpeech (~30 GB)"
+rm -rf "$wham_dir"
+echo "  [OK] Removed WHAM noise (~5 GB)"
+rm -rf "$storage_dir/metadata"
+echo "  [OK] Removed CSV metadata"
+
 echo ""
 echo "============================================"
 echo "  DATASET GENERATION COMPLETE!"
 echo ""
 echo "  HDF5 file: $hdf5_output"
 echo "  Size: $(du -h $hdf5_output | cut -f1)"
+echo "  Disk saved: ~35 GB (source files removed)"
 echo ""
 echo "  Training:"
 echo "    python audio_train_h5.py --h5_path $hdf5_output"
