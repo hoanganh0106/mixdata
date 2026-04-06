@@ -140,7 +140,7 @@ class AutoVRAMConfig:
             config.segment = 4.0
             config.precision = "bf16-mixed" if supports_bf16 else "16-mixed"
             config.accumulate_grad_batches = 2
-            config.num_workers = 6
+            config.num_workers = 16 # Tăng mạnh cực đại do có 112 Threads CPU
             config.pin_memory = True
             config.persistent_workers = True
             config.strategy = "auto"

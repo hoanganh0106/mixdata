@@ -32,6 +32,8 @@ import os
 import sys
 import argparse
 import gc
+import multiprocessing
+from functools import partial
 from datetime import datetime
 
 import h5py
@@ -314,6 +316,16 @@ class HDF5BatchWriter:
 # Main pipeline
 # ============================================================
 
+def _worker_wrapper(row_tuple, n_src, librispeech_dir, wham_dir, freq):
+    idx, row = row_tuple
+    try:
+        sample = process_single_utterance(
+            row, n_src, librispeech_dir, wham_dir, freq
+        )
+        return idx, sample, None
+    except Exception as e:
+        return idx, None, str(e)
+
 def process_metadata_to_hdf5(csv_path, writer, n_src, librispeech_dir,
                               wham_dir, freq):
     """Xử lý 1 CSV metadata file, ghi kết quả vào HDF5 writer."""
@@ -322,18 +334,26 @@ def process_metadata_to_hdf5(csv_path, writer, n_src, librispeech_dir,
     total_rows = len(md_file)
     print(f"  Rows: {total_rows}")
 
-    # Xử lý tuần tự (single-thread) vì HDF5 không hỗ trợ concurrent writes
-    for idx, (_, row) in enumerate(tqdm(md_file.iterrows(),
-                                         total=total_rows,
-                                         desc="  Generating")):
-        try:
-            sample = process_single_utterance(
-                row, n_src, librispeech_dir, wham_dir, freq
-            )
-            writer.add_sample(sample)
-        except Exception as e:
-            print(f"\n  [WARN] Failed to process row {idx}: {e}")
-            continue
+    # Xử lý nhanh gấp nhiều lần do tận dụng 112 CPU cores để load file + mix
+    num_procs = min(multiprocessing.cpu_count() - 2, 60) # Chừa 2 cores cho OS, giới hạn I/O
+    print(f"  Sử dụng {num_procs} processes xử lý song song")
+    
+    worker_func = partial(
+        _worker_wrapper,
+        n_src=n_src, 
+        librispeech_dir=librispeech_dir, 
+        wham_dir=wham_dir, 
+        freq=freq
+    )
+
+    with multiprocessing.Pool(processes=num_procs) as pool:
+        for idx, sample, err in tqdm(pool.imap_unordered(worker_func, md_file.iterrows()),
+                                     total=total_rows,
+                                     desc="  Generating"):
+            if err:
+                print(f"\n  [WARN] Failed to process row {idx}: {err}")
+            else:
+                writer.add_sample(sample)
 
     print(f"  Done: {total_rows} utterances processed")
 

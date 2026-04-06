@@ -95,7 +95,7 @@ $python_path scripts/create_librimix_hdf5.py \
     --output_file $hdf5_output \
     --n_src 3 \
     --freq 16k \
-    --batch_write_size 500
+    --batch_write_size 10000
 
 # ============================================================
 # DỌN DẸP: Xóa source audio + metadata (đã nằm trong HDF5)
