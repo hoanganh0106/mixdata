@@ -61,7 +61,7 @@ def create_speakers_dataframe(librispeech_dir):
     speakers_metadata_path = os.path.join(librispeech_dir, 'SPEAKERS.TXT')
     speakers_metadata = pd.read_csv(speakers_metadata_path, sep="|",
                                     skiprows=11,
-                                    error_bad_lines=False, header=0,
+                                    on_bad_lines='skip', header=0,
                                     names=['speaker_ID', 'sex', 'subset',
                                            'minutes', 'names'],
                                     skipinitialspace=True)
