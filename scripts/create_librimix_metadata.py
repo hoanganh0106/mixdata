@@ -76,6 +76,13 @@ def create_librimix_metadata(librispeech_dir, librispeech_md_dir, wham_dir,
         if not librispeech_md_file.endswith('.csv'):
             print(f"{librispeech_md_file} is not a csv file, continue.")
             continue
+            
+        # Explicit bypass just in case the list remove failed
+        save_path = os.path.join(md_dir, '_'.join([dataset, librispeech_md_file]))
+        if os.path.exists(save_path):
+            print(f"Bypassing generation for {librispeech_md_file} since {save_path} already exists")
+            continue
+            
         # Get the name of the corresponding noise md file
         try:
             wham_md_file = [f for f in wham_md_files if
@@ -124,8 +131,12 @@ def check_already_generated(md_dir, dataset, to_be_ignored,
                 to_be_ignored.append('test-clean.csv')
             print(f"{generated} already exists in "
                   f"{md_dir} it won't be overwritten")
-    for element in to_be_ignored:
-        librispeech_md_files.remove(element)
+    
+    # Safe removal
+    for element in set(to_be_ignored):
+        if element in librispeech_md_files:
+            librispeech_md_files.remove(element)
+
 
 
 def create_librimix_df(librispeech_md_file, librispeech_dir,
