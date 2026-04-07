@@ -334,10 +334,10 @@ def process_metadata_to_hdf5(csv_path, writer, n_src, librispeech_dir,
     total_rows = len(md_file)
     print(f"  Rows: {total_rows}")
 
-    # Xử lý nhanh gấp nhiều lần do tận dụng 112 CPU cores để load file + mix
-    num_procs = min(multiprocessing.cpu_count() - 2, 60) # Chừa 2 cores cho OS, giới hạn I/O
+    # Giảm số processes xuống để tránh lỗi hết RAM (The paging file is too small)
+    # Spawning 60 processes x ~200MB RAM each = 12GB RAM just for Python environments alone.
+    num_procs = min(multiprocessing.cpu_count() - 2, 8) 
     print(f"  Sử dụng {num_procs} processes xử lý song song")
-    
     worker_func = partial(
         _worker_wrapper,
         n_src=n_src, 
