@@ -50,14 +50,20 @@ def augment_noise(sound_paths, speed):
     )
 
 
+import librosa
+
 def apply_fx(sound_path, speed):
-    # Get the effect
-    fx = (AudioEffectsChain().speed(speed))
     s, rate = sf.read(sound_path)
     # Get 1st channel
-    s = s[:, 0]
-    # Apply effect
-    s = fx(s)
+    if s.ndim > 1:
+        s = s[:, 0]
+    
+    # Change speed by resampling
+    # To change speed by factor F (e.g. 0.8), we pretend original SR is F * rate 
+    # and resample to rate. This slows down/speeds up and pitches down/up exactly like sox speed.
+    if speed != 1.0:
+        s = librosa.resample(s, orig_sr=speed * rate, target_sr=rate)
+        
     # Write the file
     sf.write(f"""{sound_path.replace(
         '.wav',f"sp{str(speed).replace('.','')}" +'.wav')}""", s, rate)
